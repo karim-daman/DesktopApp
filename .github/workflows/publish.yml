@@ -137,7 +137,7 @@ jobs:
         uses: actions/github-script@v6
         env:
           GIST_ID: ${{ secrets.GIST_ID }}
-          GIST_FILENAME: latest-version.json
+          GIST_FILENAME: version.json
         with:
           github-token: ${{ secrets.PAT }}
           script: |
