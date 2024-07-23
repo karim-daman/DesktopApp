@@ -144,22 +144,10 @@ jobs:
             const fs = require('fs');
             const content = `${{ steps.create-content.outputs.content }}`;
             let gistId = process.env.GIST_ID;
+            let gistUrl;
 
-            try {
-              if (gistId) {
-                await github.rest.gists.update({
-                  gist_id: gistId,
-                  files: {
-                    [process.env.GIST_FILENAME]: {
-                      content: content
-                    }
-                  }
-                });
-              } else {
-                throw new Error('No GIST_ID provided');
-              }
-            } catch (error) {
-              console.log('Failed to update gist or no GIST_ID provided. Creating new gist.');
+            async function createGist() {
+              console.log('Creating new gist');
               const response = await github.rest.gists.create({
                 files: {
                   [process.env.GIST_FILENAME]: {
@@ -168,15 +156,49 @@ jobs:
                 },
                 public: true
               });
-              gistId = response.data.id;
-              console.log(`Created new gist with ID: ${gistId}`);
+              return response.data.id;
             }
-            const gistUrl = `https://gist.github.com/${context.repo.owner}/${gistId}`;
-            console.log(`Gist URL: ${gistUrl}`);
-            core.setOutput('gist-url', gistUrl);
 
-      - name: Output Gist URL
-        run: echo "The gist can be found at ${{ steps.create-gist.outputs.gist-url }}"
+            try {
+              if (gistId) {
+                console.log(`Attempting to update gist with ID: ${gistId}`);
+                try {
+                  await github.rest.gists.update({
+                    gist_id: gistId,
+                    files: {
+                      [process.env.GIST_FILENAME]: {
+                        content: content
+                      }
+                    }
+                  });
+                  console.log('Successfully updated existing gist');
+                } catch (updateError) {
+                  console.log(`Failed to update gist: ${updateError.message}`);
+                  if (updateError.status === 404) {
+                    console.log('Gist not found. Creating new gist.');
+                    gistId = await createGist();
+                  } else {
+                    throw updateError;
+                  }
+                }
+              } else {
+                console.log('No GIST_ID provided. Creating new gist.');
+                gistId = await createGist();
+              }
+              gistUrl = `https://gist.github.com/${context.repo.owner}/${gistId}`;
+              console.log(`Gist URL: ${gistUrl}`);
+              core.setOutput('gist-url', gistUrl);
+              core.setOutput('gist-id', gistId);
+            } catch (error) {
+              console.log(`Error: ${error.message}`);
+              core.setFailed(`Failed to create or update gist: ${error.message}`);
+            }
+
+      - name: Output Gist Information
+        run: |
+          echo "The gist can be found at ${{ steps.create-gist.outputs.gist-url }}"
+          echo "Gist ID: ${{ steps.create-gist.outputs.gist-id }}"
+
 # name: Increment Version and Release
 
 # on:
@@ -273,3 +295,4 @@ jobs:
 #           releaseBody: "See the assets to download this version and install."
 #           releaseDraft: false
 #           prerelease: false
+
