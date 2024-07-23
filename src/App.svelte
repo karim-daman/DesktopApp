@@ -18,8 +18,6 @@
 
 <Toaster />
 
-<Navbar />
-
 <main>
   <Router {routes} />
 </main>

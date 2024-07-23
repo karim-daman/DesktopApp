@@ -21,7 +21,7 @@
   });
 </script>
 
-<button class="press rounded-full w-5 h-5 p-0.5 mt-1.5 bg-yellow-400" on:click={toggle}>
+<button class="press rounded-full w-6 bg-yellow-400" on:click={toggle}>
   {#if dark}
     <img class="" src="sun.svg" alt="" />
   {:else}
