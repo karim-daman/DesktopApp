@@ -94,3 +94,182 @@ jobs:
           releaseBody: "See the assets to download this version and install."
           releaseDraft: false
           prerelease: false
+
+  create-gist:
+    needs: [increment-version-and-release, build-tauri]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create gist content
+        id: create-content
+        run: |
+          CONTENT=$(cat << EOF
+          {
+            "version": "v${{ needs.increment-version-and-release.outputs.new_version }}",
+            "notes": "New release",
+            "pub_date": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+            "platforms": {
+              "darwin-x86_64": {
+                "signature": "Signature for macOS x86_64",
+                "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/app-x86_64.app.tar.gz"
+              },
+              "darwin-aarch64": {
+                "signature": "Signature for macOS aarch64",
+                "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/app-aarch64.app.tar.gz"
+              },
+              "linux-x86_64": {
+                "signature": "Signature for Linux x86_64",
+                "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/app-amd64.AppImage.tar.gz"
+              },
+              "windows-x86_64": {
+                "signature": "Signature for Windows x86_64",
+                "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/app-x64-setup.nsis.zip"
+              }
+            }
+          }
+          EOF
+          )
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create or update gist
+        id: create-gist
+        uses: actions/github-script@v6
+        env:
+          GIST_ID: ${{ secrets.GIST_ID }}
+          GIST_FILENAME: latest-version.json
+        with:
+          github-token: ${{ secrets.PAT }}
+          script: |
+            const fs = require('fs');
+            const content = `${{ steps.create-content.outputs.content }}`;
+            let gistId = process.env.GIST_ID;
+
+            try {
+              if (gistId) {
+                await github.rest.gists.update({
+                  gist_id: gistId,
+                  files: {
+                    [process.env.GIST_FILENAME]: {
+                      content: content
+                    }
+                  }
+                });
+              } else {
+                throw new Error('No GIST_ID provided');
+              }
+            } catch (error) {
+              console.log('Failed to update gist or no GIST_ID provided. Creating new gist.');
+              const response = await github.rest.gists.create({
+                files: {
+                  [process.env.GIST_FILENAME]: {
+                    content: content
+                  }
+                },
+                public: true
+              });
+              gistId = response.data.id;
+              console.log(`Created new gist with ID: ${gistId}`);
+            }
+            const gistUrl = `https://gist.github.com/${context.repo.owner}/${gistId}`;
+            console.log(`Gist URL: ${gistUrl}`);
+            core.setOutput('gist-url', gistUrl);
+
+      - name: Output Gist URL
+        run: echo "The gist can be found at ${{ steps.create-gist.outputs.gist-url }}"
+# name: Increment Version and Release
+
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       increment:
+#         description: "Increment type (patch, minor, major)"
+#         required: true
+#         default: "patch"
+#         type: choice
+#         options:
+#           - patch
+#           - minor
+#           - major
+
+# jobs:
+#   increment-version-and-release:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       new_version: ${{ steps.increment-version.outputs.new }}
+#     steps:
+#       - uses: actions/checkout@v3
+#         with:
+#           fetch-depth: 0
+#           token: ${{ secrets.PAT }}
+
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: "16"
+
+#       - name: Install dependencies
+#         run: npm install -g semver
+
+#       - name: Get current version
+#         id: package-version
+#         run: echo "current=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+#       - name: Increment version
+#         id: increment-version
+#         run: |
+#           current_version=${{ steps.package-version.outputs.current }}
+#           new_version=$(semver -i ${{ github.event.inputs.increment }} $current_version)
+#           echo "new=$new_version" >> $GITHUB_OUTPUT
+#           sed -i 's/"version": "'$current_version'"/"version": "'$new_version'"/' package.json
+
+#       - name: Commit and push changes
+#         run: |
+#           git config --local user.email "action@github.com"
+#           git config --local user.name "GitHub Action"
+#           git add package.json
+#           git commit -m "Bump version to ${{ steps.increment-version.outputs.new }}"
+#           git push
+
+#       - name: Create and push tag
+#         run: |
+#           git tag v${{ steps.increment-version.outputs.new }}
+#           git push origin v${{ steps.increment-version.outputs.new }}
+
+#   build-tauri:
+#     needs: increment-version-and-release
+#     permissions:
+#       contents: write
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         platform: [macos-latest, ubuntu-20.04, windows-latest]
+
+#     runs-on: ${{ matrix.platform }}
+#     steps:
+#       - uses: actions/checkout@v3
+#         with:
+#           fetch-depth: 0
+#           token: ${{ secrets.PAT }}
+#       - name: setup node
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: 16
+#       - name: install Rust stable
+#         uses: dtolnay/rust-toolchain@stable
+#       - name: install dependencies (ubuntu only)
+#         if: matrix.platform == 'ubuntu-20.04'
+#         run: |
+#           sudo apt-get update
+#           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+#       - name: install frontend dependencies
+#         run: yarn install # or npm install
+#       - uses: tauri-apps/tauri-action@v0
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.PAT }}
+#         with:
+#           tagName: v${{ needs.increment-version-and-release.outputs.new_version }}
+#           releaseName: "App v${{ needs.increment-version-and-release.outputs.new_version }}"
+#           releaseBody: "See the assets to download this version and install."
+#           releaseDraft: false
+#           prerelease: false
