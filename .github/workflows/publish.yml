@@ -43,12 +43,13 @@ jobs:
           new_version=$(semver -i ${{ github.event.inputs.increment }} $current_version)
           echo "new=$new_version" >> $GITHUB_OUTPUT
           sed -i 's/"version": "'$current_version'"/"version": "'$new_version'"/' package.json
+          sed -i 's/"version": "'$current_version'"/"version": "'$new_version'"/' src-tauri/tauri.conf.json
 
       - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add package.json
+          git add package.json src-tauri/tauri.conf.json
           git commit -m "Bump version to ${{ steps.increment-version.outputs.new }}"
           git push
 
@@ -210,101 +211,3 @@ jobs:
         run: |
           echo "The gist can be found at ${{ steps.create-gist.outputs.gist-url }}"
           echo "Gist ID: ${{ steps.create-gist.outputs.gist-id }}"
-
-# name: Increment Version and Release
-
-# on:
-#   workflow_dispatch:
-#     inputs:
-#       increment:
-#         description: "Increment type (patch, minor, major)"
-#         required: true
-#         default: "patch"
-#         type: choice
-#         options:
-#           - patch
-#           - minor
-#           - major
-
-# jobs:
-#   increment-version-and-release:
-#     runs-on: ubuntu-latest
-#     outputs:
-#       new_version: ${{ steps.increment-version.outputs.new }}
-#     steps:
-#       - uses: actions/checkout@v3
-#         with:
-#           fetch-depth: 0
-#           token: ${{ secrets.PAT }}
-
-#       - name: Setup Node.js
-#         uses: actions/setup-node@v3
-#         with:
-#           node-version: "16"
-
-#       - name: Install dependencies
-#         run: npm install -g semver
-
-#       - name: Get current version
-#         id: package-version
-#         run: echo "current=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-#       - name: Increment version
-#         id: increment-version
-#         run: |
-#           current_version=${{ steps.package-version.outputs.current }}
-#           new_version=$(semver -i ${{ github.event.inputs.increment }} $current_version)
-#           echo "new=$new_version" >> $GITHUB_OUTPUT
-#           sed -i 's/"version": "'$current_version'"/"version": "'$new_version'"/' package.json
-
-#       - name: Commit and push changes
-#         run: |
-#           git config --local user.email "action@github.com"
-#           git config --local user.name "GitHub Action"
-#           git add package.json
-#           git commit -m "Bump version to ${{ steps.increment-version.outputs.new }}"
-#           git push
-
-#       - name: Create and push tag
-#         run: |
-#           git tag v${{ steps.increment-version.outputs.new }}
-#           git push origin v${{ steps.increment-version.outputs.new }}
-
-#   build-tauri:
-#     needs: increment-version-and-release
-#     permissions:
-#       contents: write
-#     strategy:
-#       fail-fast: false
-#       matrix:
-#         platform: [macos-latest, ubuntu-20.04, windows-latest]
-
-#     runs-on: ${{ matrix.platform }}
-#     steps:
-#       - uses: actions/checkout@v3
-#         with:
-#           fetch-depth: 0
-#           token: ${{ secrets.PAT }}
-#       - name: setup node
-#         uses: actions/setup-node@v3
-#         with:
-#           node-version: 16
-#       - name: install Rust stable
-#         uses: dtolnay/rust-toolchain@stable
-#       - name: install dependencies (ubuntu only)
-#         if: matrix.platform == 'ubuntu-20.04'
-#         run: |
-#           sudo apt-get update
-#           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
-#       - name: install frontend dependencies
-#         run: yarn install # or npm install
-#       - uses: tauri-apps/tauri-action@v0
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.PAT }}
-#         with:
-#           tagName: v${{ needs.increment-version-and-release.outputs.new_version }}
-#           releaseName: "App v${{ needs.increment-version-and-release.outputs.new_version }}"
-#           releaseBody: "See the assets to download this version and install."
-#           releaseDraft: false
-#           prerelease: false
-
