@@ -73,6 +73,9 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.PAT }}
+      - name: Fetch latest changes
+        run: git fetch && git checkout main && git pull
+
       - name: setup node
         uses: actions/setup-node@v3
         with:
