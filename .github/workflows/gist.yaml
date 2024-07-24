@@ -1,4 +1,4 @@
-name: Increment Version and Release
+name: create or update gist
 
 on:
   workflow_dispatch:
