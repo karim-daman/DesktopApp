@@ -107,24 +107,36 @@ jobs:
             "version": "v${{ needs.increment-version-and-release.outputs.new_version }}",
             "notes": "New release",
             "pub_date": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
-            "platforms": {
-              "darwin-x86_64": {
-                "signature": "Signature for macOS x86_64",
-                "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/app-x86_64.app.tar.gz"
-              },
-              "darwin-aarch64": {
-                "signature": "Signature for macOS aarch64",
-                "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/app-aarch64.app.tar.gz"
-              },
-              "linux-x86_64": {
-                "signature": "Signature for Linux x86_64",
-                "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/app-amd64.AppImage.tar.gz"
-              },
-              "windows-x86_64": {
-                "signature": "Signature for Windows x86_64",
-                "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/app-x64-setup.nsis.zip"
-              }
+             "platforms": {
+            "linux-x86_64-rpm": {
+              "signature": "Signature for Linux x86_64 RPM",
+              "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/desktop-app-${{ needs.increment-version-and-release.outputs.new_version }}-1.x86_64.rpm"
+            },
+            "linux-x86_64-appimage": {
+              "signature": "Signature for Linux x86_64 AppImage",
+              "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/desktop-app_${{ needs.increment-version-and-release.outputs.new_version }}_amd64.AppImage"
+            },
+            "linux-x86_64-deb": {
+              "signature": "Signature for Linux x86_64 DEB",
+              "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/desktop-app_${{ needs.increment-version-and-release.outputs.new_version }}_amd64.deb"
+            },
+            "darwin-aarch64-dmg": {
+              "signature": "Signature for macOS aarch64 DMG",
+              "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/DesktopApp_${{ needs.increment-version-and-release.outputs.new_version }}_aarch64.dmg"
+            },
+            "windows-x86_64-exe": {
+              "signature": "Signature for Windows x86_64 EXE",
+              "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/DesktopApp_${{ needs.increment-version-and-release.outputs.new_version }}_x64-setup.exe"
+            },
+            "windows-x86_64-msi": {
+              "signature": "Signature for Windows x86_64 MSI",
+              "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/DesktopApp_${{ needs.increment-version-and-release.outputs.new_version }}_x64_en-US.msi"
+            },
+            "darwin-aarch64-tar": {
+              "signature": "Signature for macOS aarch64 TAR",
+              "url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.increment-version-and-release.outputs.new_version }}/DesktopApp_aarch64.app.tar.gz"
             }
+          }
           }
           EOF
           )
