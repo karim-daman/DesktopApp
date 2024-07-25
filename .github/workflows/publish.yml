@@ -72,6 +72,10 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.PAT }}
+      - name: Fetch latest tags
+        run: git fetch --tags origin
+      - name: Checkout latest tag
+        run: git checkout v${{ needs.increment-version-and-release.outputs.new_version }}
       - name: setup node
         uses: actions/setup-node@v3
         with:
