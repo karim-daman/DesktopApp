@@ -24,7 +24,32 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
-      # ... [previous steps remain unchanged]
+      - uses: actions/checkout@v4
+
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: "npm"
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: install frontend dependencies
+        run: npm install
 
       - uses: tauri-apps/tauri-action@v0
         env:
@@ -32,34 +57,19 @@ jobs:
           TAURI_PRIVATE_KEY: ${{secrets.TAURI_PRIVATE_KEY}}
           TAURI_KEY_PASSWORD: ${{secrets.TAURI_KEY_PASSWORD}}
         with:
-          tagName: app-v__VERSION__
-          releaseName: "App v__VERSION__"
+          tagName: v__VERSION__
+          releaseName: "v__VERSION__"
           releaseBody: "See the assets to download this version and install."
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
 
-      - name: Generate version.json
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          APP_VERSION=$(grep '^version =' src-tauri/Cargo.toml | cut -d '"' -f2)
-          echo "{\"version\": \"$APP_VERSION\", \"notes\": \"See the assets to download this version and install.\", \"pub_date\": \"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"}" > version.json
-
-      - name: Upload version.json
-        if: matrix.platform == 'ubuntu-22.04'
-        uses: actions/upload-artifact@v3
-        with:
-          name: version-json
-          path: version.json
-
   update-gist:
     needs: publish-tauri
     runs-on: ubuntu-latest
     steps:
-      - name: Download version.json
-        uses: actions/download-artifact@v3
-        with:
-          name: version-json
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Update Gist
         env:
