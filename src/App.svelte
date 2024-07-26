@@ -5,6 +5,7 @@
 
   import toast, { Toaster } from "svelte-french-toast";
   import { onMount } from "svelte";
+  import Updater from "$lib/Updater.svelte";
 
   onMount(() => {
     toast.success("It works!");
@@ -18,6 +19,8 @@
 <Toaster />
 
 <main>
+  <Updater />
+
   <Router {routes} />
 </main>
 
