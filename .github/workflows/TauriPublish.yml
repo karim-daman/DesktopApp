@@ -51,6 +51,10 @@ jobs:
       - name: install frontend dependencies
         run: npm install
 
+      - name: Create version.json
+        run: |
+          echo '{"version": "1.0.0"}' > version.json
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -96,3 +100,102 @@ jobs:
                 }
               }
             }'
+
+# name: "publish"
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   publish-tauri:
+#     permissions:
+#       contents: write
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         include:
+#           - platform: "macos-latest"
+#             args: "--target aarch64-apple-darwin"
+#           - platform: "macos-latest"
+#             args: "--target x86_64-apple-darwin"
+#           - platform: "ubuntu-22.04"
+#             args: ""
+#           - platform: "windows-latest"
+#             args: ""
+
+#     runs-on: ${{ matrix.platform }}
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: install dependencies (ubuntu only)
+#         if: matrix.platform == 'ubuntu-22.04'
+#         run: |
+#           sudo apt-get update
+#           sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+#       - name: setup node
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: lts/*
+#           cache: "npm"
+
+#       - name: install Rust stable
+#         uses: dtolnay/rust-toolchain@stable
+#         with:
+#           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+#       - name: Rust cache
+#         uses: swatinem/rust-cache@v2
+#         with:
+#           workspaces: "./src-tauri -> target"
+
+#       - name: install frontend dependencies
+#         run: npm install
+
+#       - uses: tauri-apps/tauri-action@v0
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#           TAURI_PRIVATE_KEY: ${{secrets.TAURI_PRIVATE_KEY}}
+#           TAURI_KEY_PASSWORD: ${{secrets.TAURI_KEY_PASSWORD}}
+#         with:
+#           tagName: v__VERSION__
+#           releaseName: "v__VERSION__"
+#           releaseBody: "See the assets to download this version and install."
+#           releaseDraft: true
+#           prerelease: false
+#           args: ${{ matrix.args }}
+
+#   update-gist:
+#     needs: publish-tauri
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+
+#       - name: Update Gist
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#           GIST_ID: ${{ secrets.GIST_ID }}
+#         run: |
+#           # Ensure version.json exists
+#           if [ ! -f version.json ]; then
+#             echo "Error: version.json not found"
+#             exit 1
+#           fi
+
+#           # Update the Gist
+#           curl -L \
+#             -X PATCH \
+#             -H "Accept: application/vnd.github+json" \
+#             -H "Authorization: Bearer $GITHUB_TOKEN" \
+#             -H "X-GitHub-Api-Version: 2022-11-28" \
+#             https://api.github.com/gists/$GIST_ID \
+#             -d '{
+#               "files": {
+#                 "version.json": {
+#                   "content": '"$(cat version.json | jq -R -s .)"'
+#                 }
+#               }
+#             }'
