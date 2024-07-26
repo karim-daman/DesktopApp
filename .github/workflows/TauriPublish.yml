@@ -76,9 +76,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIST_ID: 9c400e3f6a061b2c35409b09587655ef
         run: |
-          # Ensure latest.json exists
-          if [ ! -f latest.json ]; then
-            echo "Error: latest.json not found"
+          # Ensure version.json exists
+          if [ ! -f version.json ]; then
+            echo "Error: version.json not found"
             exit 1
           fi
 
