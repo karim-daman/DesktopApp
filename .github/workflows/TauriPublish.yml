@@ -9,7 +9,6 @@ jobs:
   publish-tauri:
     permissions:
       contents: write
-      gists: write # Add permission to write to gists
     strategy:
       fail-fast: false
       matrix:
