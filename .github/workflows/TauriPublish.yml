@@ -57,23 +57,12 @@ jobs:
           echo '{"version": "1.0.0"}' > version.json
           echo "content=$(cat version.json)" >> $GITHUB_OUTPUT
 
-      - name: Debug
-        env:
-          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
-        run: |
-          echo "Token prefix: ${GIST_TOKEN:0:4}..."
-          echo "Token length: ${#GIST_TOKEN}"
-          echo "Gist ID: ${{ secrets.GIST_ID }}"
-
-      - name: Update Gist
-        uses: popsiclestick/gist-sync-action@v1.2.0
-        id: sync
+      - name: Update Gist with version.json content
+        uses: exuanbo/actions-deploy-gist@v1
         with:
-          auth: ${{ secrets.GIST_TOKEN }}
-          gist_url: https://gist.github.com/karim-daman/${{ secrets.GIST_ID }}
-          gist_title: version.json
-          gist_description: App Version Info
-          github_file: version.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+          gist_id: ${{ secrets.GIST_ID }}
+          file_path: version.json
 
       - uses: tauri-apps/tauri-action@v0
         env:
