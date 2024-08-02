@@ -52,15 +52,17 @@ jobs:
         run: npm install
 
       - name: Create version.json
+        id: create_version
         run: |
           echo '{"version": "1.0.0"}' > version.json
+          echo "content=$(cat version.json)" >> $GITHUB_OUTPUT
 
       - name: Update Gist with version.json content
-        uses: matchai/update-gist@v1.0.2
+        uses: exuanbo/actions-deploy-gist@v1
         with:
-          gist_id: ${{ secrets.GIST_ID }} # Replace with your Gist ID
-          filename: "version.json" # The filename in the gist to update
-          content: ${{ steps.create_version.outputs.content }} # Content of version.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+          gist_id: ${{ secrets.GIST_ID }}
+          file_path: version.json
 
       - uses: tauri-apps/tauri-action@v0
         env:
