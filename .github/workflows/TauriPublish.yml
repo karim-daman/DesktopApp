@@ -73,4 +73,18 @@ jobs:
           releaseBody: "See the assets to download this version and install."
           releaseDraft: true
           prerelease: false
-          args: ${{ matrix.args }}
+          args:
+            ${{ matrix.args }}
+
+            # New steps to update the gist
+      - name: Read latest.json
+        id: read_latest
+        run: echo "LATEST_CONTENT=$(cat latest.json)" >> $GITHUB_OUTPUT
+
+      - name: Update Gist
+        uses: exuanbo/actions-deploy-gist@v1
+        with:
+          token: ${{ secrets.PAT }}
+          gist_id: ${{ secrets.GIST_ID }}
+          file_path: latest.json
+          file_type: json
