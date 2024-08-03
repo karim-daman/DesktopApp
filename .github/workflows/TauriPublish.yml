@@ -86,5 +86,5 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           gist_id: ${{ secrets.GIST_ID }}
-          file_path: version.json
+          file_path: latest.json
           file_type: json
