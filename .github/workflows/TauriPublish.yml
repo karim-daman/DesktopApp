@@ -76,19 +76,10 @@ jobs:
           args: ${{ matrix.args }}
 
       # New steps to update the gist
-      - name: Read and prepare latest.json
-        id: read_latest
-        run: |
-          content=$(cat latest.json)
-          content="${content//'%'/'%25'}"
-          content="${content//$'\n'/'%0A'}"
-          content="${content//$'\r'/'%0D'}"
-          echo "LATEST_CONTENT=$content" >> $GITHUB_OUTPUT
-
       - name: Update Gist
         uses: exuanbo/actions-deploy-gist@v1
         with:
           token: ${{ secrets.PAT }}
           gist_id: ${{ secrets.GIST_ID }}
-          filename: version.json
-          content: ${{ steps.read_latest.outputs.LATEST_CONTENT }}
+          gist_file_name: version.json
+          file_path: latest.json
