@@ -46,7 +46,7 @@
     },
     "updater": {
       "active": true,
-      "endpoints": ["https://github.com/karim-daman/DesktopApp/releases/download/{{current_version}}/{{target}}"],
+      "endpoints": ["https://gist.githubusercontent.com/karim-daman/366aea2a8ad0b62796f8bf5b9a13df24/raw/48cfc28461c89804e5068a367b21445984571c38/latest.json"],
       "dialog": true,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk1NUY3MkM5REJGMUM2QTkKUldTcHh2SGJ5WEpmbGNUbURmUlhXVkN5bkZncFRFSXBFM29PUEpBNkQ3clN6S2FxZ2ZOTytJNnQK",
       "windows": {

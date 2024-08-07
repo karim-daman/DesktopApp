@@ -1,5 +1,3 @@
-#### this makes build and modifies version.json
-
 # name: "publish"
 
 # on:
@@ -77,11 +75,10 @@
 #           prerelease: false
 #           args: ${{ matrix.args }}
 
-#       # New steps to update the gist
 #       - name: Update Gist
 #         uses: exuanbo/actions-deploy-gist@v1
 #         with:
 #           token: ${{ secrets.PAT }}
 #           gist_id: ${{ secrets.GIST_ID }}
-#           gist_file_name: version.json
 #           file_path: latest.json
+#           file_type: json
